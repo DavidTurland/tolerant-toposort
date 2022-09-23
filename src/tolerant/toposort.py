@@ -61,7 +61,8 @@ items in the preceeding sets.
 
     # Copy the input so as to leave it unmodified.
     data = data.copy()
-    disabled = disabled.copy()
+    if disabled:
+        disabled = disabled.copy()
     # Ignore self dependencies.
     for k, v in data.items():
         v.discard(k)
@@ -73,10 +74,12 @@ items in the preceeding sets.
         ordered = set(item for item, dep in data.items() if len(dep) == 0)
         if not ordered:
             break
-        if (ordered - disabled):
-            yield ordered - disabled 
         if disabled:
+            if (ordered - disabled):
+                yield ordered - disabled 
             disabled.update(set(item for item, dep in data.items() if dep & disabled))
+        else:
+            yield ordered
         data = {item: (dep - ordered)
                 for item, dep in data.items()
                     if item not in ordered}
