@@ -1,6 +1,6 @@
 #######################################################################
 # Implements a topological sort algorithm.
-#
+# Copyright David Turland 2023
 # Copyright 2014 True Blade Systems, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +16,12 @@
 # limitations under the License.
 #
 # Notes:
-#  Based on http://code.activestate.com/recipes/578272-topological-sort
-#   with these major changes:
-#    Added unittests.
-#    Deleted doctests (maybe not the best idea in the world, but it cleans
-#     up the docstring).
-#    Moved functools import to the top of the file.
-#    Changed assert to a ValueError.
-#    Changed iter[items|keys] to [items|keys], for python 3
-#     compatibility. I don't think it matters for python 2 these are
-#     now lists instead of iterables.
-#    Copy the input so as to leave it unmodified.
-#    Renamed function from toposort2 to toposort.
-#    Handle empty input.
-#    Switch tests to use set literals.
+#  
+#  Based on https://pypi.org/project/toposort
+#  with these changes:
+#  -   toposort and toposort_flatten take an optional set of disabled items.
+#      These disabled items, and their dependents, will not be included
+#      in the returned batch(es) 
 #
 ########################################################################
 
@@ -39,7 +31,14 @@ __all__ = ['toposort', 'toposort_flatten', 'CircularDependencyError']
 
 
 class CircularDependencyError(ValueError):
+    """ Error - an item eventually depends on itself
+
+        **NOTE** : we tolerate items _directly_ depending on themeselves
+    """
     def __init__(self, data):
+        """ ## Args
+	  - **data** : the list containing  the circular dependency
+        """
         # Sort the data just to make the output consistent, for use in
         #  error messages.  That's convenient for doctests.
         s = 'Circular dependencies exist among these items: {{{}}}'.format(', '.join('{!r}:{!r}'.format(key, value) for key, value in sorted(data.items())))
@@ -48,11 +47,20 @@ class CircularDependencyError(ValueError):
 
 
 def toposort(data, disabled = set()):
-    """Dependencies are expressed as a dictionary whose keys are items
-and whose values are a set of dependent items. Output is a list of
-sets in topological order. The first set consists of items with no
-dependences, each subsequent set consists of items that depend upon
-items in the preceeding sets.
+    """
+## Args
+- data - the dependency graph
+       dependencies are expressed as a dictionary whose keys are items
+       and whose values are a set of dependent items. 
+
+- disabled<optional> - Set of items which, with their dependents, should not be
+       included in the output
+
+## return
+- a list of sets in topological order which are not disabled, or depend on
+a disabled item.
+The first set consists of items with no dependences, each subsequent set 
+consists of items that depend upon items in the preceeding sets.
 """
 
     # Special case empty input.
@@ -60,39 +68,48 @@ items in the preceeding sets.
         return
 
     # Copy the input so as to leave it unmodified.
-    data = data.copy()
+    _data = data.copy()
     if disabled:
         disabled = disabled.copy()
-    # Ignore self dependencies.
-    for k, v in data.items():
+    # Delete self-dependencies.
+    for k, v in _data.items():
         v.discard(k)
     # Find all items that don't depend on anything.
-    extra_items_in_deps = _reduce(set.union, data.values()) - set(data.keys())
+    extra_items_in_deps = _reduce(set.union, _data.values()) - set(_data.keys())
     # Add empty dependences where needed.
-    data.update({item:set() for item in extra_items_in_deps})
+    _data.update({item:set() for item in extra_items_in_deps})
     while True:
-        ordered = set(item for item, dep in data.items() if len(dep) == 0)
+        ordered = set(item for item, dep in _data.items() if len(dep) == 0)
         if not ordered:
             break
         if disabled:
             if (ordered - disabled):
                 yield ordered - disabled 
-            disabled.update(set(item for item, dep in data.items() if dep & disabled))
+            disabled.update(set(item for item, dep in _data.items() if dep & disabled))
         else:
             yield ordered
-        data = {item: (dep - ordered)
-                for item, dep in data.items()
+        _data = {item: (dep - ordered)
+                for item, dep in _data.items()
                     if item not in ordered}
-    if len(data) != 0:
-        raise CircularDependencyError(data)
+    if len(_data) != 0:
+        raise CircularDependencyError(_data)
 
 
-def toposort_flatten(data, sort=True):
-    """Returns a single list of dependencies. For any set returned by
+def toposort_flatten(data, sort=True, disabled = set()):
+    """ Returns a single list of dependencies. For any set returned by
 toposort(), those items are sorted and appended to the result (just to
-make the results deterministic)."""
+make the results deterministic).
+## Args
+- data - the dependency graph
+       dependencies are expressed as a dictionary whose keys are items
+       and whose values are a set of dependent items. 
+- sort<True> - should each batch be sorted
+       
+- disabled<optional> - Set of items which, with their dependents, should not be
+       included in the output
+       """
 
     result = []
-    for d in toposort(data):
+    for d in toposort(data,disabled):
         result.extend((sorted if sort else list)(d))
     return result
