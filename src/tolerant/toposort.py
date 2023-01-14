@@ -21,7 +21,7 @@
 #  with these changes:
 #  -   toposort and toposort_flatten take an optional set of disabled items.
 #      These disabled items, and their dependents, will not be included
-#      in the returned batch(es) 
+#      in the returned batch(es)  
 #
 ########################################################################
 
