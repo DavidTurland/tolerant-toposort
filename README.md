@@ -1,6 +1,22 @@
+---
+
+# Table of Contents
+* [Tolerant toposort](#Tolerant-toposort)
+* [Examples](#Examples)
+	* [Simple](#Simple)
+	* [Less Simple](#Less-Simple)
+* [Use Case](#Use-Case)
+* [Typical Usage (ymmv)](#Typical-Usage-(ymmv))
+* [API](#API)
+	* [Module `tolerant.toposort`](#Module-`tolerant.toposort`)
+		* [Functions](#Functions)
+		* [Classes](#Classes)
+* [Testing](#Testing)
+* [Install](#Install)
+
 # Tolerant toposort
 
-Extends the Python package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph
+Extends the Python package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
 **Tolerant toposort** returns batches of nodes which are independent of disabled nodes
 
 ```python
@@ -19,10 +35,12 @@ toposort(data, disabled)
 
 # Examples
 ## Simple
-Item  1 depends on Item 2, depends on 3, depends on 4
-With Item 3 disabled both 2 and 1 are implicitly disabled.
-However, using tolerant toposort, we can still process Item 4
+Item  1 depends on Item 2, depends on 3, depends on 4   
+With Item 3 disabled both 2 and 1 are implicitly disabled.   
+However, using tolerant toposort, we find we can still process Item 4
+
 <img src="./doc/tiny.png" width="400">
+
 ```python
 data = {
             1:  {2},
@@ -35,9 +53,11 @@ result = toposort(data, disabled)
 ```
 
 ## Less Simple
-A more complicated graph with Item 7 disabled
-Again, using tolerant toposort, we can still process Items 3, 5, then 10 and then 12:
+A more complicated graph with Item 7 disabled   
+Again, using tolerant toposort, we find we can still process Items 3, 5, then 10, and then 12:
+
 <img src="./doc/small.png" width="400">
+
 ```python
 data = {2: {2,11},
         9: {11, 8, 10},
@@ -127,7 +147,97 @@ main()
 ```
 
 # API
-See [pdoc](https://pdoc.dev/)-generated [API](doc/tolerant/index.html)
+---
+  
+## Module `tolerant.toposort`
+
+generates batches of dependant items which are enabled and do not depend
+    on disabled items
+
+Based on [toposrt()]<https://pypi.org/project/toposort>)
+with these changes:
+-   toposort and toposort_flatten take an optional set of disabled items.
+    These disabled items, and their dependents, will not be included
+    in the returned batch(es) 
+
+### Functions
+
+
+#### Function `toposort`
+
+
+
+```python
+def toposort(
+    data,
+    disabled=set()
+  )
+```
+
+Dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items.  
+Returns a list of sets in topological order. The first set consists of items with no
+dependences, each subsequent set consists of items that depend upon
+items in the preceeding sets.
+
+
+###### Args
+- **data** - the dependency graph
+dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items. 
+
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
+
+###### Returns
+- a list of sets in topological order which are not disabled, or depend on
+a disabled item.  
+The first set consists of items with no dependences, each subsequent set 
+consists of items that depend upon items in the preceeding sets.
+
+#### Function `toposort_flatten`
+
+
+
+```python
+def toposort_flatten(
+    data,
+    sort=True,
+    disabled=set()
+  )
+```
+
+Returns a single list of dependencies. For any set returned by
+toposort(), those items are sorted and appended to the result (just to
+make the results deterministic).
+###### Args
+- **data** - the dependency graph
+  dependencies are expressed as a dictionary whose keys are items
+  and whose values are a set of dependent items. 
+- **sort**(True) - should each batch be sorted
+       
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
+
+### Classes
+
+
+#### Class `CircularDependencyError`
+
+
+
+```python
+class CircularDependencyError(
+    data
+)
+```
+
+An item _eventually_ depends on itself
+
+**NOTE** : we tolerate items _directly_ depending on themeselves
+
+#### Args
+- **data** : the list containing  the circular dependency
 
 # Testing
 ```bash
@@ -137,8 +247,4 @@ See [pdoc](https://pdoc.dev/)-generated [API](doc/tolerant/index.html)
 # Install
 ```bash
  sudo python3 setup.py install
-```
-# Create Documention
-```bash
-pdoc --html --output-dir doc src/tolerant
 ```

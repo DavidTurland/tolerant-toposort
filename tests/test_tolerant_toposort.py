@@ -40,9 +40,36 @@
 import concurrent.futures
 
 from unittest import TestCase
-from pprint import pprint
 
 from tolerant.toposort import toposort,toposort_flatten,CircularDependencyError
+
+class TestPython101(TestCase):
+    def test_objects(self):
+        o2  = object()
+        o3  = object()
+        o5  = object()
+        o7  = object()
+        o8  = object()
+        o9  = object()
+        o10 = object()
+        o11 = object()
+        data = {
+                o2: {o11},
+                o9: {o11, o8},
+                o10: {o11, o3},
+                o11: {o7, o5},
+                o8: {o7, o3, o8},
+            }
+        # same key objects, new item(set) object with same items (less any self-reference)
+        # this is fine...
+        _data = {item: set(e for e in dep if e != item) for item, dep in data.items()}
+
+        for k, v in data.items():
+           for i in v:
+              self.assertIn(k,_data)
+              if i is k:
+                 continue
+              self.assertIn(i,_data[k])
 
 class TestVanilla(TestCase):
     """ 
@@ -75,6 +102,33 @@ class TestVanilla(TestCase):
                                4: {1},
                                6: {7},
                               }))
+    def test_input_modified_to_remove_self_references(self):
+        """
+          Changes to original toposort:
+            The input will have its self-referential elements removed
+            Test renamed from 'test_input_not_modified'
+        """
+        def get_data():
+            return {
+                2: {11},
+                9: {11, 8},
+                10: {11, 3},
+                11: {7, 5},
+                8: {7, 3, 8},  # Includes something self-referential.
+            }
+
+        data = get_data()
+        orig = get_data()
+        self.assertEqual(data, orig)
+        results = list(toposort(data))
+        self.assertEqual(data, orig,"self-reference Not removed")
+
+        # we need to remove the self-reference
+        #orig[8].remove(8)
+        # and then it matches
+        self.assertEqual(data, orig)
+        expected = [{3, 5, 7}, {8, 11}, {9, 2, 10}]
+        self.assertEqual(results, expected)
 
 class TestTolerant(TestCase):
     """ 
@@ -87,7 +141,23 @@ class TestTolerant(TestCase):
                            },{3}))
         expected = [{4}]
         self.assertListEqual(actual,expected)
-        
+
+    def test_tiny_all_disabled(self):
+        actual = list(toposort({1: {2},
+                                2: {3},
+                                3: {4},
+                                },{1,2,3,4}))
+        expected = []
+        self.assertListEqual(actual,expected)
+
+    def test_tiny_more_than_all_disabled(self):
+        actual = list(toposort({1: {2},
+                                2: {3},
+                                3: {4},
+                               },{1,2,3,4,5}))
+        expected = []
+        self.assertListEqual(actual,expected) 
+
     def test_doc_sample(self):
         data = {
             2:  {11},
@@ -138,7 +208,7 @@ class TestTolerant(TestCase):
             11: {7, 5},
             8:  {7, 3, 8},  # Includes something self-referential.
         }
-        # No dependants, so just this item will be removed from barches
+        # No dependants, so just this item will be removed from batches
         disabled = {10}
         expected = [{3, 5, 7}, {8,11},{2,9}]
         result = list(toposort(data,disabled))
@@ -191,8 +261,8 @@ class TestProcess(TestCase):
                  8: {7, 3},
                 12: {10},
                 }
-        willBeDisabled = {7}
-        disabled       = set()
+
+        disabled       = set() # In real-life this will be persisted !!
         processed      = set() # In real-life this will be persisted !!
         while True:
             batches = toposort(graph,disabled)
@@ -254,7 +324,7 @@ class TestConcurrentProcess(TestCase):
                 12: {10},
                 }
 
-        disabled       = set()
+        disabled       = set() # In real-life this will be persisted !!
         processed      = {} # In real-life this will be persisted !!
         while True:
             batches = toposort(graph,disabled)

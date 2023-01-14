@@ -24,14 +24,22 @@
 #      in the returned batch(es)  
 #
 ########################################################################
+""" Generates successive batches of dependant items which are enabled and do not depend
+    on disabled items
 
+Based on [toposort()]https://pypi.org/project/toposort)
+with these changes:
+-   **toposort** and **toposort_flatten** take an optional set of disabled items.
+    These disabled items, and their dependents, will not be included
+    in the returned batch(es)
+"""
 from functools import reduce as _reduce
-
+#import copy
 __all__ = ['toposort', 'toposort_flatten', 'CircularDependencyError']
 
 
 class CircularDependencyError(ValueError):
-    """ Error - an item eventually depends on itself
+    """ An item _eventually_ depends on itself
 
         **NOTE** : we tolerate items _directly_ depending on themeselves
     """
@@ -47,18 +55,24 @@ class CircularDependencyError(ValueError):
 
 
 def toposort(data, disabled = set()):
-    """
+    """\
+Dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items.  
+Returns a list of sets in topological order. The first set consists of items with no
+dependences, each subsequent set consists of items that depend upon
+items in the preceeding sets.
+
 ## Args
-- data - the dependency graph
-       dependencies are expressed as a dictionary whose keys are items
-       and whose values are a set of dependent items. 
+- **data** - the dependency graph
+dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items. 
 
-- disabled<optional> - Set of items which, with their dependents, should not be
-       included in the output
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
 
-## return
+## Returns
 - a list of sets in topological order which are not disabled, or depend on
-a disabled item.
+a disabled item.  
 The first set consists of items with no dependences, each subsequent set 
 consists of items that depend upon items in the preceeding sets.
 """
@@ -69,11 +83,16 @@ consists of items that depend upon items in the preceeding sets.
 
     # Copy the input so as to leave it unmodified.
     _data = data.copy()
+    ##_data = copy.deepcopy(data)
     if disabled:
         disabled = disabled.copy()
     # Delete self-dependencies.
-    for k, v in _data.items():
-        v.discard(k)
+    #for k, v in _data.items():
+    #    v.discard(k)
+    ## Copy the input so as to leave it unmodified.
+    # Discard self-dependencies and copy two levels deep.
+    _data = {item: set(e for e in dep if e != item) for item, dep in data.items()}
+
     # Find all items that don't depend on anything.
     extra_items_in_deps = _reduce(set.union, _data.values()) - set(_data.keys())
     # Add empty dependences where needed.
@@ -96,18 +115,19 @@ consists of items that depend upon items in the preceeding sets.
 
 
 def toposort_flatten(data, sort=True, disabled = set()):
-    """ Returns a single list of dependencies. For any set returned by
+    """\
+Returns a single list of dependencies. For any set returned by
 toposort(), those items are sorted and appended to the result (just to
 make the results deterministic).
 ## Args
-- data - the dependency graph
-       dependencies are expressed as a dictionary whose keys are items
-       and whose values are a set of dependent items. 
-- sort<True> - should each batch be sorted
+- **data** - the dependency graph
+  dependencies are expressed as a dictionary whose keys are items
+  and whose values are a set of dependent items. 
+- **sort**(True) - should each batch be sorted
        
-- disabled<optional> - Set of items which, with their dependents, should not be
-       included in the output
-       """
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
+"""
 
     result = []
     for d in toposort(data,disabled):

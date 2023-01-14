@@ -196,12 +196,7 @@ class TestCase(unittest.TestCase):
             )
         self.assertEqual(ex.exception.data, {1: set([2]), 2: set([3]), 3: set([1])})
 
-    def test_input_modified_to_remove_self_references(self):
-        """
-          Changes to original toposort:
-            The input will have its self-referential elements removed
-            Test renamed from 'test_input_not_modified'
-        """
+    def test_input_not_modified(self):
         def get_data():
             return {
                 2: {11},
@@ -215,14 +210,7 @@ class TestCase(unittest.TestCase):
         orig = get_data()
         self.assertEqual(data, orig)
         results = list(toposort(data))
-        self.assertNotEqual(data, orig,"self-reference removed")
-
-        # we need to remove the self-reference
-        orig[8].remove(8)
-        # and then it matches
         self.assertEqual(data, orig)
-        expected = [{3, 5, 7}, {8, 11}, {9, 2, 10}]
-        self.assertEqual(results, expected)
 
     def test_input_not_modified_when_cycle_error(self):
         def get_data():
