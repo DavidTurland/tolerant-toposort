@@ -1,21 +1,21 @@
----
+# Tolerant toposort
 
-# Table of Contents
-* [Tolerant toposort](#Tolerant-toposort)
+## Table of Contents
+* [Description](#Description)
 * [Examples](#Examples)
-*	 [Simple](#Simple)
-*	 [Less Simple](#Less-Simple)
+	* [Simple](#Simple)
+	* [Less Simple](#Less-Simple)
 * [Use Case](#Use-Case)
 * [Typical Usage (ymmv)](#Typical-Usage-(ymmv))
 * [API](#API)
-*	 [Module `tolerant.toposort`](#Module-`tolerant.toposort`)
-*		 [Functions](#Functions)
-*		 [Classes](#Classes)
+	* [Module `tolerant.toposort`](#Module-`tolerant.toposort`)
+		* [Functions](#Functions)
+		* [Classes](#Classes)
 * [Testing](#Testing)
 * [Install](#Install)
 
-# Tolerant toposort
 
+# Description
 Extends the Python package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
 **Tolerant toposort** returns batches of nodes which are independent of disabled nodes
 
@@ -151,12 +151,12 @@ main()
   
 ## Module `tolerant.toposort`
 
-generates batches of dependant items which are enabled and do not depend
+Generates successive batches of dependant items which are enabled and do not depend
     on disabled items
 
-Based on [toposrt()]<https://pypi.org/project/toposort>)
+Based on [toposort()]<https://pypi.org/project/toposort>)
 with these changes:
--   toposort and toposort_flatten take an optional set of disabled items.
+-   **toposort** and **toposort_flatten** take an optional set of disabled items.
     These disabled items, and their dependents, will not be included
     in the returned batch(es) 
 
@@ -179,7 +179,6 @@ and whose values are a set of dependent items.
 Returns a list of sets in topological order. The first set consists of items with no
 dependences, each subsequent set consists of items that depend upon
 items in the preceeding sets.
-
 
 ###### Args
 - **data** - the dependency graph

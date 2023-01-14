@@ -81,14 +81,10 @@ consists of items that depend upon items in the preceeding sets.
     if len(data) == 0:
         return
 
-    # Copy the input so as to leave it unmodified.
-    _data = data.copy()
     ##_data = copy.deepcopy(data)
     if disabled:
         disabled = disabled.copy()
-    # Delete self-dependencies.
-    #for k, v in _data.items():
-    #    v.discard(k)
+
     ## Copy the input so as to leave it unmodified.
     # Discard self-dependencies and copy two levels deep.
     _data = {item: set(e for e in dep if e != item) for item, dep in data.items()}
