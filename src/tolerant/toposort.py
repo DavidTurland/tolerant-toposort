@@ -27,7 +27,7 @@
 """ Generates successive batches of dependant items which are enabled and do not depend
     on disabled items
 
-Based on [toposort()]https://pypi.org/project/toposort)
+Based on [toposort](https://pypi.org/project/toposort)
 with these changes:
 -   **toposort** and **toposort_flatten** take an optional set of disabled items.
     These disabled items, and their dependents, will not be included
