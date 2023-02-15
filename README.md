@@ -16,8 +16,8 @@
 
 
 # Description
-Extends the Python package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
-**Tolerant toposort** returns batches of nodes which are independent of disabled nodes
+**Tolerant toposort** extends the PyPi package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
+It takes a (directed) dependency graph, and disabled nodes as input,and returns ordered batches of nodes which are independent of disabled nodes
 
 ```python
 data = {
@@ -31,7 +31,6 @@ disabled = {5}
 toposort(data, disabled)
 [{3, 7}, {8}]
 ```
-
 
 # Examples
 ## Simple
@@ -54,7 +53,7 @@ result = toposort(data, disabled)
 
 ## Less Simple
 A more complicated graph with Item 7 disabled   
-Again, using tolerant toposort, we find we can still process Items 3, 5, then 10, and then 12:
+Again, using tolerant toposort, we find we can still process Items 3 and 5, then 10, and then 12:
 
 <img src="./doc/small.png" width="400">
 
@@ -79,7 +78,7 @@ The aim was to process(build) as many nodes(packages) as possible in a tree of n
 - Whilst processing, a node might fail to be processed
 - Or the node might be known to be failed prior to processing
 - If a node was failed then it and its dependants could not be processed
-- Fixing, aka re-enabling nodes, took time
+- Fixing, aka re-enabling, nodes took time
 - Processing nodes took time
 - Processing a node only to find its dependant was failed, took time
 - Once a node was processed, it needed no further processing
@@ -108,41 +107,66 @@ With tolerant toposort:
 # Typical Usage (ymmv)
 ```python
 from tolerant.toposort import toposort,CircularDependencyError
+
+class ProcessException(Exception):
+    def __init__(self,node):
+        super(ProcessException, self).__init__('')
+        self.node = node
+
 def get_graph():
-	""" build and return your graph """
-    return [1:{2}]
-def process():
+    """ build and return your graph """
+    return {2: {2,11},
+            9: {11, 8, 10},
+           10: {3},
+           11: {7, 5},
+            8: {7, 3},
+           12: {10},
+           13: {12},
+           14: {2}
+           }
+
+def process(node):
     """
     perform a once-only process on a node.
     return the success of the proceess
     """
-    return true;
+    print(f"processing {node}")
+    return node != 12;
+
 def main():
-    disabled=set()          # add any known failed items at start-up
-    already_processed=set() # persist this between runs!!
+    disabled = {9}            # add any known disabled items at start-up
+    already_processed = set() # persist this between runs!!
     graph = get_graph()
-    while(true):
+    while(True):
+        print(f"calling toposort")
         batches = toposort(graph,disabled)
-        # our work is done ( bar fixing any disabled)
-        break if ! batches
-        processedAny = false
+        if not batches:
+            print(f"batches is empty")
+            break 
+        processedAny = False
         try:
             for batch in batches:
                 for node in batch:
-                    next if already_processed(node)
+                    if node in already_processed:
+                       print(f"already processed {node}")
+                       continue
                     if process(node):
                         already_processed.add(node)
-                        processedAny= true
+                        print(f"processed {node}")
+                        processedAny= True
                     else:
                         raise ProcessException(node)
-        # our work is done ( bar fixing any disabled)
-        break if !processedAny
+            # our work is done ( bar enabling any disabled)
+            if not processedAny:
+                print(f"no processing so finished")
+                break
         except ProcessException as pe:
-            # pe.node can now be concurrently 'fixed'
+            # pe.node can now be concurrently 'enabled'
+            print(f"disabled {pe.node}")
             disabled.add(pe.node)
-    if ! disabled:
+    if not disabled:
         # we are done
-    	pass
+        pass
 main()
 ```
 
@@ -154,7 +178,7 @@ main()
 Generates successive batches of dependant items which are enabled and do not depend
     on disabled items
 
-Based on [toposort()]<https://pypi.org/project/toposort>)
+Based on [toposort](https://pypi.org/project/toposort)
 with these changes:
 -   **toposort** and **toposort_flatten** take an optional set of disabled items.
     These disabled items, and their dependents, will not be included
