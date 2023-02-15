@@ -1,8 +1,23 @@
 # Tolerant toposort
 
+## Table of Contents
+* [Description](#Description)
+* [Examples](#Examples)
+	* [Simple](#Simple)
+	* [Less Simple](#Less-Simple)
+* [Use Case](#Use-Case)
+* [Typical Usage (ymmv)](#Typical-Usage-(ymmv))
+* [API](#API)
+	* [Module `tolerant.toposort`](#Module-`tolerant.toposort`)
+		* [Functions](#Functions)
+		* [Classes](#Classes)
+* [Testing](#Testing)
+* [Install](#Install)
+
+
 # Description
-**Tolerant toposort** extends the PyPi package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
-It takes a (directed) dependency graph, and disabled nodes as input,and returns ordered batches of nodes which are independent of disabled nodes
+Extends the Python package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
+**Tolerant toposort** returns batches of nodes which are independent of disabled nodes
 
 ```python
 data = {
@@ -17,13 +32,14 @@ toposort(data, disabled)
 [{3, 7}, {8}]
 ```
 
+
 # Examples
 ## Simple
 Item  1 depends on Item 2, depends on 3, depends on 4   
 With Item 3 disabled both 2 and 1 are implicitly disabled.   
 However, using tolerant toposort, we find we can still process Item 4
 
-<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/doc/tiny.png" width="400">
+<img src="./doc/tiny.png" width="400">
 
 ```python
 data = {
@@ -38,9 +54,9 @@ result = toposort(data, disabled)
 
 ## Less Simple
 A more complicated graph with Item 7 disabled   
-Again, using tolerant toposort, we find we can still process Items 3 and 5, then 10, and then 12:
+Again, using tolerant toposort, we find we can still process Items 3, 5, then 10, and then 12:
 
-<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/small.png" width="400">
+<img src="./doc/small.png" width="400">
 
 ```python
 data = {2: {2,11},
@@ -63,7 +79,7 @@ The aim was to process(build) as many nodes(packages) as possible in a tree of n
 - Whilst processing, a node might fail to be processed
 - Or the node might be known to be failed prior to processing
 - If a node was failed then it and its dependants could not be processed
-- Fixing, aka re-enabling, nodes took time
+- Fixing, aka re-enabling nodes, took time
 - Processing nodes took time
 - Processing a node only to find its dependant was failed, took time
 - Once a node was processed, it needed no further processing
@@ -92,70 +108,135 @@ With tolerant toposort:
 # Typical Usage (ymmv)
 ```python
 from tolerant.toposort import toposort,CircularDependencyError
-
-class ProcessException(Exception):
-    def __init__(self,node):
-        super(ProcessException, self).__init__('')
-        self.node = node
-
 def get_graph():
-    """ build and return your graph """
-    return {2: {2,11},
-            9: {11, 8, 10},
-           10: {3},
-           11: {7, 5},
-            8: {7, 3},
-           12: {10},
-           13: {12},
-           14: {2}
-           }
-
-def process(node):
+	""" build and return your graph """
+    return [1:{2}]
+def process():
     """
     perform a once-only process on a node.
     return the success of the proceess
     """
-    print(f"processing {node}")
-    return node != 12;
-
+    return true;
 def main():
-    disabled = {9}            # add any known disabled items at start-up
-    already_processed = set() # persist this between runs!!
+    disabled=set()          # add any known failed items at start-up
+    already_processed=set() # persist this between runs!!
     graph = get_graph()
-    while(True):
-        print(f"calling toposort")
+    while(true):
         batches = toposort(graph,disabled)
-        if not batches:
-            print(f"batches is empty")
-            break 
-        processedAny = False
+        # our work is done ( bar fixing any disabled)
+        break if ! batches
+        processedAny = false
         try:
             for batch in batches:
                 for node in batch:
-                    if node in already_processed:
-                       print(f"already processed {node}")
-                       continue
+                    next if already_processed(node)
                     if process(node):
                         already_processed.add(node)
-                        print(f"processed {node}")
-                        processedAny= True
+                        processedAny= true
                     else:
                         raise ProcessException(node)
-            # our work is done ( bar enabling any disabled)
-            if not processedAny:
-                print(f"no processing so finished")
-                break
+        # our work is done ( bar fixing any disabled)
+        break if !processedAny
         except ProcessException as pe:
-            # pe.node can now be concurrently 'enabled'
-            print(f"disabled {pe.node}")
+            # pe.node can now be concurrently 'fixed'
             disabled.add(pe.node)
-    if not disabled:
+    if ! disabled:
         # we are done
-        pass
+    	pass
 main()
 ```
 
 # API
+---
+  
+## Module `tolerant.toposort`
+
+Generates successive batches of dependant items which are enabled and do not depend
+    on disabled items
+
+Based on [toposort()]<https://pypi.org/project/toposort>)
+with these changes:
+-   **toposort** and **toposort_flatten** take an optional set of disabled items.
+    These disabled items, and their dependents, will not be included
+    in the returned batch(es) 
+
+### Functions
+
+
+#### Function `toposort`
+
+
+
+```python
+def toposort(
+    data,
+    disabled=set()
+  )
+```
+
+Dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items.  
+Returns a list of sets in topological order. The first set consists of items with no
+dependences, each subsequent set consists of items that depend upon
+items in the preceeding sets.
+
+###### Args
+- **data** - the dependency graph
+dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items. 
+
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
+
+###### Returns
+- a list of sets in topological order which are not disabled, or depend on
+a disabled item.  
+The first set consists of items with no dependences, each subsequent set 
+consists of items that depend upon items in the preceeding sets.
+
+#### Function `toposort_flatten`
+
+
+
+```python
+def toposort_flatten(
+    data,
+    sort=True,
+    disabled=set()
+  )
+```
+
+Returns a single list of dependencies. For any set returned by
+toposort(), those items are sorted and appended to the result (just to
+make the results deterministic).
+###### Args
+- **data** - the dependency graph
+  dependencies are expressed as a dictionary whose keys are items
+  and whose values are a set of dependent items. 
+- **sort**(True) - should each batch be sorted
+       
+- **disabled**(optional) - Set of items which, with their dependents, should not be
+  included in the output
+
+### Classes
+
+
+#### Class `CircularDependencyError`
+
+
+
+```python
+class CircularDependencyError(
+    data
+)
+```
+
+An item _eventually_ depends on itself
+
+**NOTE** : we tolerate items _directly_ depending on themeselves
+
+#### Args
+- **data** : the list containing  the circular dependency
 
 # Testing
 ```bash
