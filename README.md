@@ -1,21 +1,5 @@
-# Tolerant toposort
+# <a id="tolerant-toposort"></a>Tolerant toposort
 
-## Table of Contents
-* [Description](#Description)
-* [Examples](#Examples)
-	* [Simple](#Simple)
-	* [Less Simple](#Less-Simple)
-* [Use Case](#Use-Case)
-* [Typical Usage (ymmv)](#Typical-Usage-(ymmv))
-* [API](#API)
-	* [Module `tolerant.toposort`](#Module-`tolerant.toposort`)
-		* [Functions](#Functions)
-		* [Classes](#Classes)
-* [Testing](#Testing)
-* [Install](#Install)
-
-
-# Description
 **Tolerant toposort** extends the PyPi package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
 It takes a (directed) dependency graph, and disabled nodes as input,and returns ordered batches of nodes which are independent of disabled nodes
 
@@ -32,13 +16,13 @@ toposort(data, disabled)
 [{3, 7}, {8}]
 ```
 
-# Examples
-## Simple
+# <a id="examples"></a>Examples
+## <a id="simple"></a>Simple
 Item  1 depends on Item 2, depends on 3, depends on 4   
 With Item 3 disabled both 2 and 1 are implicitly disabled.   
 However, using tolerant toposort, we find we can still process Item 4
 
-<img src="./doc/tiny.png" width="400">
+<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/doc/tiny.png" width="400">
 
 ```python
 data = {
@@ -51,11 +35,11 @@ result = toposort(data, disabled)
 [{4}]
 ```
 
-## Less Simple
+## <a id="less-simple"></a>Less Simple
 A more complicated graph with Item 7 disabled   
 Again, using tolerant toposort, we find we can still process Items 3 and 5, then 10, and then 12:
 
-<img src="./doc/small.png" width="400">
+<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/small.png" width="400">
 
 ```python
 data = {2: {2,11},
@@ -70,7 +54,7 @@ result = toposort(data, disabled)
 [{3, 5}, {10}, {12}]
 ```
 
-# Use Case
+# <a id="use-case"></a>Use Case
 
 The original use case was building packages.
 
@@ -103,8 +87,8 @@ With tolerant toposort:
 - As disabled nodes are encountered they can be added to the disabled set, and a revised batch set created
 - Processing can then continue until all possible nodes have been attempted
 - The maximum set of disabled nodes is returned
-
-# Typical Usage (ymmv)
+### <a id="typical-usage-foo"></a>Typical Usage Foo
+### <a id="typical-usage-too"></a>Typical Usage Too
 ```python
 from tolerant.toposort import toposort,CircularDependencyError
 
@@ -170,8 +154,7 @@ def main():
 main()
 ```
 
-# API
----
+# <a id="api"></a>API
   
 ## Module `tolerant.toposort`
 
@@ -262,12 +245,12 @@ An item _eventually_ depends on itself
 #### Args
 - **data** : the list containing  the circular dependency
 
-# Testing
+# <a id="testing"></a>Testing
 ```bash
  nose2
  python3 setup.py test
 ```
-# Install
+# <a id="install"></a>Install
 ```bash
  sudo python3 setup.py install
 ```

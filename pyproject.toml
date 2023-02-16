@@ -1,6 +1,58 @@
 [build-system]
 requires = [
-  "setuptools>=42",
-  "wheel"
+    "setuptools>=42",
+    "wheel",
+    "pytest>=6"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "tolerant_toposort"
+description = "Implements a topological sort algorithm with ability to tolerate existing but disabled nodes"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = '>=3'
+license = {text = "Apache License Version 2.0"}
+authors = [
+    {name = "David Turland", email = "david@turland.org"},
+    {name = "Eric V. Smith", email = "eric@trueblade.com"},
+]
+keywords = ['toposort','graph','tolerant']
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+#repository = "https://github.com/DavidTurland/tolerant-toposort"
+dynamic = ["version"]
+#packages = [
+#    { include = "tolerant", from = "src" },
+#]
+
+[project.optional-dependencies]
+test = [
+  "pytest < 5.0.0",
+  "pytest-cov[all]",
+  "Flask>=2,<3"
+]
+
+[project.urls]
+Issues     =  'https://github.com/DavidTurland/tolerant-toposort/issues'
+Source     = 'https://github.com/DavidTurland/tolerant-toposort'
+Original   =  'https://pypi.org/project/toposort'
+
+
+[tool.setuptools.dynamic]
+# See https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata
+version = {attr = "tolerant.__version__"}
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+    "integration",
+]
