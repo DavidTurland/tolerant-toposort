@@ -21,8 +21,7 @@ toposort(data, disabled)
 Item  1 depends on Item 2, depends on 3, depends on 4   
 With Item 3 disabled both 2 and 1 are implicitly disabled.   
 However, using tolerant toposort, we find we can still process Item 4
-
-<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/doc/tiny.png" width="400">
+![tiny](https://user-images.githubusercontent.com/11562561/219431039-bbc7cc5b-eb80-4fe4-8eb9-8668ce500a10.png)
 
 ```python
 data = {
@@ -38,8 +37,7 @@ result = toposort(data, disabled)
 ## <a id="less-simple"></a>Less Simple
 A more complicated graph with Item 7 disabled   
 Again, using tolerant toposort, we find we can still process Items 3 and 5, then 10, and then 12:
-
-<img src="https://github.com/DavidTurland/tolerant-toposort/raw/main/doc/small.png" width="400">
+![small](https://user-images.githubusercontent.com/11562561/219431230-07accc97-1a15-4f2d-8ba6-06ad9768e2a0.png)
 
 ```python
 data = {2: {2,11},
