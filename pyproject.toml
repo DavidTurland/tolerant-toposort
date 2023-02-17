@@ -9,7 +9,6 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tolerant_toposort"
 description = "Implements a topological sort algorithm with ability to tolerate existing but disabled nodes"
-readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = '>=3'
 license = {text = "Apache License Version 2.0"}
 authors = [
@@ -26,11 +25,8 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
-#repository = "https://github.com/DavidTurland/tolerant-toposort"
-dynamic = ["version"]
-#packages = [
-#    { include = "tolerant", from = "src" },
-#]
+
+dynamic = ["version","readme"]
 
 [project.optional-dependencies]
 test = [
@@ -40,14 +36,22 @@ test = [
 ]
 
 [project.urls]
-Issues     =  'https://github.com/DavidTurland/tolerant-toposort/issues'
+Issues     = 'https://github.com/DavidTurland/tolerant-toposort/issues'
 Source     = 'https://github.com/DavidTurland/tolerant-toposort'
-Original   =  'https://pypi.org/project/toposort'
+Original   = 'https://gitlab.com/ericvsmith/toposort'
 
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+# [tool.setuptools]
+# packages = ["tolerant"]
+
+# avoids No `packages` or `py_modules` configuration, performing automatic discovery.
+[tool.setuptools.packages.find]
+where   = ["src"]       # list of folders that contain the packages (["."] by default)
+include = ["tolerant*"]  # package names should match these glob patterns (["*"] by default)
 
 [tool.setuptools.dynamic]
-# See https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata
 version = {attr = "tolerant.__version__"}
+readme = {file = "README.md", content-type = "text/markdown"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
