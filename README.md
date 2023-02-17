@@ -1,3 +1,4 @@
+![python_package workflow](https://github.com/DavidTurland/tolerant-toposort/actions/workflows/python_package.yaml/badge.svg)
 # <a id="tolerant-toposort"></a>Tolerant toposort
 
 **Tolerant toposort** extends the PyPi package [toposort](https://pypi.org/project/toposort) to support disabled nodes within the graph   
