@@ -2,7 +2,7 @@
 requires = [
     "setuptools>=42",
     "wheel",
-    "pytest>=6"
+    "pytest>=7"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -30,7 +30,7 @@ dynamic = ["version","readme"]
 
 [project.optional-dependencies]
 test = [
-  "pytest < 5.0.0",
+  "pytest >=7",
   "pytest-cov[all]",
   "Flask>=2,<3"
 ]
@@ -54,7 +54,9 @@ version = {attr = "tolerant.__version__"}
 readme = {file = "README.md", content-type = "text/markdown"}
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
+# thanks https://stackoverflow.com/questions/50155464/using-pytest-with-a-src-layer
+pythonpath = [ "src" ]
 addopts = "-ra -q"
 testpaths = [
     "tests",
