@@ -209,7 +209,7 @@ class TestCase(unittest.TestCase):
         data = get_data()
         orig = get_data()
         self.assertEqual(data, orig)
-        results = list(toposort(data))
+        list(toposort(data))
         self.assertEqual(data, orig)
 
     def test_input_not_modified_when_cycle_error(self):
@@ -278,4 +278,4 @@ class TestAll(unittest.TestCase):
         self.assertEqual(all, found)
 
 
-#unittest.main()
+# unittest.main()
