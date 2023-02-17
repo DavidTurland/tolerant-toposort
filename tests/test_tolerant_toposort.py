@@ -20,7 +20,7 @@
 #
 # TestVanilla - The inherited functionality from Original Toposort:
 #
-# TestTolerant - The new functionality supporting disabled nodes 
+# TestTolerant - The new functionality supporting disabled nodes
 #
 # TestProcess - A simple use-case
 #   A tree of elements are repeatedly processed until no more can be done
@@ -41,16 +41,17 @@ import concurrent.futures
 
 from unittest import TestCase
 
-from tolerant.toposort import toposort,toposort_flatten,CircularDependencyError
+from tolerant.toposort import toposort, toposort_flatten, CircularDependencyError
+
 
 class TestPython101(TestCase):
     def test_objects(self):
-        o2  = object()
-        o3  = object()
-        o5  = object()
-        o7  = object()
-        o8  = object()
-        o9  = object()
+        o2 = object()
+        o3 = object()
+        o5 = object()
+        o7 = object()
+        o8 = object()
+        o9 = object()
         o10 = object()
         o11 = object()
         data = {
@@ -65,43 +66,45 @@ class TestPython101(TestCase):
         _data = {item: set(e for e in dep if e != item) for item, dep in data.items()}
 
         for k, v in data.items():
-           for i in v:
-              self.assertIn(k,_data)
-              if i is k:
-                 continue
-              self.assertIn(i,_data[k])
+            for i in v:
+                self.assertIn(k, _data)
+                if i is k:
+                    continue
+                self.assertIn(i, _data[k])
+
 
 class TestVanilla(TestCase):
-    """ 
+    """
     The inherited functionality from Original Toposort
     """
     def test_tiny(self):
         actual = list(toposort({1: {2},
                                 2: {3},
                                 3: {4},
-                           }))
+                                }))
         expected = [{4}, {3}, {2}, {1}]
-        self.assertListEqual(actual,expected)
-        
+        self.assertListEqual(actual, expected)
+
     def test_small(self):
-        actual = list(toposort({2: {2,11},
+        actual = list(toposort({2: {2, 11},
                                 9: {11, 8, 10},
-                               10: {3},
-                               11: {7, 5},
+                                10: {3},
+                                11: {7, 5},
                                 8: {7, 3},
-                               12: {10},
-               }))
+                                12: {10},
+                                }))
         expected = [{3, 5, 7}, {8, 10, 11}, {9, 2, 12}]
-        self.assertListEqual(actual,expected)
+        self.assertListEqual(actual, expected)
 
     def test_circular(self):
         with self.assertRaises(CircularDependencyError):
-            x = list(toposort({1: {2},
-                               2: {3},
-                               3: {4},
-                               4: {1},
-                               6: {7},
-                              }))
+            list(toposort({1: {2},
+                           2: {3},
+                           3: {4},
+                           4: {1},
+                           6: {7},
+                           }))
+
     def test_input_modified_to_remove_self_references(self):
         """
           Changes to original toposort:
@@ -121,97 +124,98 @@ class TestVanilla(TestCase):
         orig = get_data()
         self.assertEqual(data, orig)
         results = list(toposort(data))
-        self.assertEqual(data, orig,"self-reference Not removed")
+        self.assertEqual(data, orig, "self-reference Not removed")
 
         # we need to remove the self-reference
-        #orig[8].remove(8)
+        # orig[8].remove(8)
         # and then it matches
         self.assertEqual(data, orig)
         expected = [{3, 5, 7}, {8, 11}, {9, 2, 10}]
         self.assertEqual(results, expected)
 
+
 class TestTolerant(TestCase):
-    """ 
-    The new functionality supporting disabled nodes 
+    """
+    The new functionality supporting disabled nodes
     """
     def test_tiny_one_disabled(self):
         actual = list(toposort({1: {2},
                                 2: {3},
                                 3: {4},
-                           },{3}))
+                                }, {3}))
         expected = [{4}]
-        self.assertListEqual(actual,expected)
+        self.assertListEqual(actual, expected)
 
     def test_tiny_all_disabled(self):
         actual = list(toposort({1: {2},
                                 2: {3},
                                 3: {4},
-                                },{1,2,3,4}))
+                                }, {1, 2, 3, 4}))
         expected = []
-        self.assertListEqual(actual,expected)
+        self.assertListEqual(actual, expected)
 
     def test_tiny_more_than_all_disabled(self):
         actual = list(toposort({1: {2},
                                 2: {3},
                                 3: {4},
-                               },{1,2,3,4,5}))
+                                }, {1, 2, 3, 4, 5}))
         expected = []
-        self.assertListEqual(actual,expected) 
+        self.assertListEqual(actual, expected)
 
     def test_doc_sample(self):
         data = {
-            2:  {11},
-            9:  {11, 8},
-            10: {11, 3},
-            11: {7, 5},
-            8:  {7, 3},
-        }
+                2:  {11},
+                9:  {11, 8},
+                10: {11, 3},
+                11: {7, 5},
+                8:  {7, 3},
+                }
         disabled = {5}
-        actual = list(toposort(data,disabled))
+        actual = list(toposort(data, disabled))
         expected = [{3, 7}, {8}]
-        self.assertListEqual(actual,expected)
-        
+        self.assertListEqual(actual, expected)
+
     def test_small_one_disabled(self):
-        actual = list(toposort({2: {2,11},
+        actual = list(toposort({2: {2, 11},
                                 9: {11, 8, 10},
-                               10: {3},
-                               11: {7, 5},
+                                10: {3},
+                                11: {7, 5},
                                 8: {7, 3},
-                               12: {10},
-                               },{7}))
+                                12: {10},
+                                }, {7}))
         expected = [{3, 5}, {10}, {12}]
-        self.assertListEqual(actual,expected)
+        self.assertListEqual(actual, expected)
 
     def test_circular(self):
         with self.assertRaises(CircularDependencyError):
-            x = list(toposort({1: {2},
-                               2: {3},
-                               3: {4},
-                               4: {1},
-                               6: {7},
-                              }))
+            list(toposort({1: {2},
+                           2: {3},
+                           3: {4},
+                           4: {1},
+                           6: {7},
+                           }))
 
     def test_circular_two(self):
         with self.assertRaises(CircularDependencyError):
-            x = list(toposort({1: {2},
-                               2: {3},
-                               3: {4},
-                               4: {1},
-                               6: set(),
-                              },{6}))
-                              
+            list(toposort({1: {2},
+                           2: {3},
+                           3: {4},
+                           4: {1},
+                           6: set(),
+                           }, {6}))
+
     def test_sort_flatten(self):
         data = {
-            2:  {11},
-            9:  {11, 8},
-            10: {11, 3},
-            11: {7, 5},
-            8:  {7, 3, 8},  # Includes something self-referential.
-        }
+                2:  {11},
+                9:  {11, 8},
+                10: {11, 3},
+                11: {7, 5},
+                8:  {7, 3, 8},  # Includes something self-referential.
+                }
         # No dependants, so just this item will be removed from batches
         disabled = {10}
-        expected = [{3, 5, 7}, {8,11},{2,9}]
-        result = list(toposort(data,disabled))
+        expected = [{3, 5, 7}, {8, 11}, {2, 9}]
+        result = list(toposort(data, disabled))
         self.assertEqual(result, expected)
 
         # Now check the sorted results.
@@ -219,12 +223,12 @@ class TestTolerant(TestCase):
         for item in expected:
             expected_results.extend(sorted(item))
 
-        result = toposort_flatten(data, True,disabled)
+        result = toposort_flatten(data, True, disabled)
         self.assertEqual(result, expected_results)
 
         # And the unsorted results.  Break the results up into groups to
         # compare them.
-        actual = toposort_flatten(data, False,disabled)
+        actual = toposort_flatten(data, False, disabled)
 
         results = [
             {i for i in actual[0:3]},
@@ -232,10 +236,12 @@ class TestTolerant(TestCase):
             {i for i in actual[5:8]},
         ]
         self.assertEqual(results, expected)
-        
+
+
 class ProcessException(ValueError):
     def __init__(self, nodes):
         self.nodes = nodes
+
 
 class TestProcess(TestCase):
     """ Slightly more representative test cases
@@ -243,29 +249,33 @@ class TestProcess(TestCase):
     All nodes in a batch can be attempted to be processed, just accrue the disabled
     """
     willBeDisabled = {7}
+
     def setUp(self):
         pass
+
     def tearDown(self):
         pass
+
     def shortDescription(self):
         return "Slightly more representative test cases"
 
-    def process(self,node):
+    def process(self, node):
         return node not in self.willBeDisabled
 
-    def test_process_small_one_disabled(self):
-        graph = {2: {2,11},
+    # disable C901 'TestProcess.test_process_small_one_disabled' is too complex (11)
+    def test_process_small_one_disabled(self):  # noqa: C901
+        graph = {2: {2, 11},
                  9: {11, 8, 10},
-                10: {3},
-                11: {7, 5},
+                 10: {3},
+                 11: {7, 5},
                  8: {7, 3},
-                12: {10},
-                }
+                 12: {10},
+                 }
 
-        disabled       = set() # In real-life this will be persisted !!
-        processed      = set() # In real-life this will be persisted !!
+        disabled = set()   # In real-life this will be persisted !!
+        processed = set()  # In real-life this will be persisted !!
         while True:
-            batches = toposort(graph,disabled)
+            batches = toposort(graph, disabled)
             processedAny = False
             if not batches:
                 break
@@ -277,30 +287,31 @@ class TestProcess(TestCase):
                             continue
                         if self.process(node):
                             processed.add(node)
-                            processedAny= True
+                            processedAny = True
                         else:
                             disabledThisBatch.add(node)
-                    if disabledThisBatch: 
+                    if disabledThisBatch:
                         raise ProcessException(disabledThisBatch)
                 if not processedAny:
                     break
             except ProcessException as be:
                 disabled.update(be.nodes)
 
-        self.assertSetEqual(disabled,self.willBeDisabled)
+        self.assertSetEqual(disabled, self.willBeDisabled)
 
-        expectedProcessed= {10,3,12,5}
-        self.assertSetEqual(processed,expectedProcessed)
+        expectedProcessed = {10, 3, 12, 5}
+        self.assertSetEqual(processed, expectedProcessed)
+
 
 class Testfunctional(TestCase):
     def test_processed_removal(self):
-        batches   = [{7,5},{3, 5, 7}, {8, 10, 11}, {9, 2, 12}]
-        processed = {7,5}
-        expected  = [{3}, {8, 10, 11}, {9, 2, 12}]
+        batches = [{7, 5}, {3, 5, 7}, {8, 10, 11}, {9, 2, 12}]
+        processed = {7, 5}
+        expected = [{3}, {8, 10, 11}, {9, 2, 12}]
 
-        output_list = list(filter(None,(batch - processed for batch in batches)))
+        output_list = list(filter(None, (batch - processed for batch in batches)))
 
-        self.assertListEqual(output_list,expected)
+        self.assertListEqual(output_list, expected)
 
 
 class TestConcurrentProcess(TestCase):
@@ -312,25 +323,25 @@ class TestConcurrentProcess(TestCase):
     """
     willBeDisabled = {7}
 
-    def process_node(self,node,processed):
+    def process_node(self, node, processed):
         return node not in self.willBeDisabled
 
     def test_process_small_one_disabled(self):
-        graph = {2: {2,11},
+        graph = {2: {2, 11},
                  9: {11, 8, 10},
-                10: {3},
-                11: {7, 5},
+                 10: {3},
+                 11: {7, 5},
                  8: {7, 3},
-                12: {10},
-                }
+                 12: {10},
+                 }
 
-        disabled       = set() # In real-life this will be persisted !!
-        processed      = {} # In real-life this will be persisted !!
+        disabled = set()  # In real-life this will be persisted !!
+        processed = {}    # In real-life this will be persisted !!
         while True:
-            batches = toposort(graph,disabled)
+            batches = toposort(graph, disabled)
             # we may have processed nodes from an earlier invocation of toposort
             # so remove all processed nodes from batches, and remove empty batches
-            batches = list(filter(None,(batch - processed.keys() for batch in batches)))
+            batches = list(filter(None, (batch - processed.keys() for batch in batches)))
 
             processedAny = False
             if not batches:
@@ -338,29 +349,27 @@ class TestConcurrentProcess(TestCase):
             try:
                 for batch in batches:
                     disabledThisBatch = set()
-                    with concurrent.futures.ThreadPoolExecutor(max_workers = len(batch)) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch)) as executor:
                         future_to_node = {executor.submit(self.process_node, node, processed): node for node in batch}
                         for future in concurrent.futures.as_completed(future_to_node):
-                            node    = future_to_node[future]
+                            node = future_to_node[future]
                             success = future.result()
                             processed[node] = success
                             processedAny = True
                             if not success:
-                                disabledThisBatch.add(node)                              
-                    if disabledThisBatch: 
+                                disabledThisBatch.add(node)
+                    if disabledThisBatch:
                         raise ProcessException(disabledThisBatch)
                 if not processedAny:
                     break
             except ProcessException as be:
                 disabled.update(be.nodes)
 
-        self.assertSetEqual(disabled,self.willBeDisabled)
+        self.assertSetEqual(disabled, self.willBeDisabled)
 
-        expectedProcessed= {3 : True, 
-                            5 : True, 
-                            7 : False, 
-                            10: True, 
-                            12: True}
-        self.assertDictEqual(processed,expectedProcessed)
-
-
+        expectedProcessed = {3: True,
+                             5: True,
+                             7: False,
+                             10: True,
+                             12: True}
+        self.assertDictEqual(processed, expectedProcessed)
