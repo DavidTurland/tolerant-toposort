@@ -53,6 +53,17 @@ result = toposort(data, disabled)
 [{3, 5}, {10}, {12}]
 ```
 
+# <a id="install"></a>Installation
+From PyPi
+```bash
+pip install tolerant-toposort
+```
+
+From here:
+```bash
+ sudo python3 setup.py install
+```
+
 # <a id="use-case"></a>Use Case
 
 The original use case was building packages.
@@ -249,7 +260,4 @@ An item _eventually_ depends on itself
  nose2
  python3 setup.py test
 ```
-# <a id="install"></a>Install
-```bash
- sudo python3 setup.py install
-```
+
